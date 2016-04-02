@@ -38,12 +38,14 @@ class Filewalker
     raise Exception.new "filewalker(dir) is not a directory: '#{dir}'." unless File.directory?(dir)
     
     # Files first
-    Dir[dir+pattern].each do |path|
-      file = path.rsubstr_from('/')
-      if (file != '.') && (file != '..')
-        if (file[0] != '.') || dotfiles
-          if File.file?(path)
-            yield(path, nil) if files
+    if files
+      Dir[dir+pattern].each do |path|
+        file = path.rsubstr_from('/')
+        if (file != '.') && (file != '..')
+          if (file[0] != '.') || dotfiles
+            if File.file?(path)
+              yield(path, nil)
+            end
           end
         end
       end
@@ -56,7 +58,9 @@ class Filewalker
         if (file != '.') && (file != '..')
           if (file[0] != '.') || dotfiles
             if File.directory?(path)
-              yield(nil, path) if dirs
+              if dirs && File.fnmatch(pattern, file)
+                yield(nil, path)
+              end
               if recursive
                 __traverse(path+'/', pattern, recursive, dotfiles, files, dirs, &block)
               end
